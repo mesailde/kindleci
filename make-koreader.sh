@@ -7,12 +7,12 @@ BUILD_DIR="$(readlink -f build)"
 ARM_ARCH="-march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=softfp -mthumb"
 
 if [[ "$1" == "debug" ]]; then
-    STRIP="echo"           # do not strip executables
-    CCDEBUG="-O0 -g"       # for LuaJIT
-    BASE_CFLAGS="-O2 -g"   # for everything else
+	STRIP="echo"           # do not strip executables
+	CCDEBUG="-O0 -g"       # for LuaJIT
+	BASE_CFLAGS="-O2 -g"   # for everything else
 	# Extra CFLAGS for LuaJIT
 	XCFLAGS="-DLUAJIT_USE_GDBJIT -DLUA_USE_APICHECK -DLUA_USE_ASSERT"
-    XCFLAGS="-DLUAJIT_USE_VALGRIND -DLUAJIT_USE_SYSMALLOC"
+	XCFLAGS="-DLUAJIT_USE_VALGRIND -DLUAJIT_USE_SYSMALLOC"
 	XCFLAGS="$XCFLAGS -I${BUILD_DIR}/valgrind/include"
 elif [[ "$1" == "release" ]]; then
 	STRIP="${CROSS_PREFIX}-strip"
