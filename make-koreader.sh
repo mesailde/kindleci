@@ -1,5 +1,6 @@
 #!/bin/bash
 . config.env
+. common.sh
 
 export PATH=$PATH:$CROSS_PATH
 
@@ -57,14 +58,6 @@ cp -r ../../work/koreader/koreader-base/spec/unit spec/base
 mv spec/base/unit/data spec/base
 ln -sf ../data spec/base/unit/data   # link otherwise busted crashes
 popd
-
-fetch() {
-	local destfile=downloads/"$1"
-	while [[ ! -f "$destfile" || `md5sum "$destfile"|cut -d\  -f1` != "$2" ]]; do
-		rm "$destfile" 2>/dev/null
-		wget -O "$destfile" "$3" || return $?
-	done
-}
 
 # Extract Tesseract English data
 # (needed for spec/base/unit tests)
