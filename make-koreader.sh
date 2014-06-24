@@ -36,12 +36,12 @@ make TARGET=kindle CHOST="${CROSS_PREFIX}" \
 	ARM_ARCH="${ARM_ARCH}" \
 	STRIP="${STRIP}" \
 	CCDEBUG="${CCDEBUG}" XCFLAGS="${XCFLAGS}" \
-	kindleupdate
+	kindleupdate || exit $?
 popd
 
 rm -rf build/koreader
 pushd build
-unzip ../work/koreader/koreader-*.zip 'koreader/*'
+unzip ../work/koreader/koreader-*.zip 'koreader/*' || exit $?
 cd koreader
 
 # Copy toolchain's libstdc++
