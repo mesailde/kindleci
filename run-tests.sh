@@ -44,11 +44,11 @@ if ! ssh kindle [ -x "$DEV_MOUNTPOINT/run-tests.sh" ]; then
 fi
 
 # Needed for zeromq tests
-ssh kindle iptables -A INPUT -i lo -j ACCEPT
+ssh kindle /usr/sbin/iptables -A INPUT -i lo -j ACCEPT
 
 ssh kindle "$DEV_MOUNTPOINT/run-tests.sh"
 STATUS=$?
 
-ssh kindle iptables -D INPUT -i lo -j ACCEPT
+ssh kindle /usr/sbin/iptables -D INPUT -i lo -j ACCEPT
 
 exit $STATUS
