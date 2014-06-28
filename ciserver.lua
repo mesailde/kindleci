@@ -1,3 +1,4 @@
+#!/usr/local/bin/luajit
 local server_port = 8888
 local api_secret = "secret"
 local ci_script = "./dispatch.sh"
@@ -55,8 +56,9 @@ local CIProcess = class("CIProcess", SubProcess)
 function CIProcess:initialize(taskqueue, task)
 	self.taskqueue = taskqueue
 	self.task = task
-	self.logfile = io.open(log_dir..task.commit..".txt", "w")
-	local cmd = ci_script.." "..task.commit
+	self.logfile = io.open(log_dir..task.commit, "w")
+	self.logfile:setvbuf("line")
+	local cmd = ci_script.." "..task.commit.." 2>&1"
 	SubProcess.initialize(self, cmd)
 end
 
@@ -75,7 +77,7 @@ function CIProcess:exit(termsig, exitcode)
 	local commit = self.task.commit
 	local status = (termsig == 0 and exitcode == 0) and "OK" or "FAIL"
 	indexfile:write(
-		string.format('<a href="%s.txt">%s</a> %s<br />\n',
+		string.format('<a href="%s">%s</a> %s<br />\n',
 			commit, commit, status)
 	)
 	indexfile:close()
@@ -121,30 +123,48 @@ function GitHubHandler:post()
 	end
 end
 
+function validate_commit(commit)
+        if commit:match("[^0-9a-f]") then
+                error(turbo.web.HTTPError(403, "Invalid commit identifier"))
+        end
+end
+
 function GitHubHandler:pushevent(body)
 	local commit = body.after
-	if commit:match("[^0-9a-f]") then
-		error(turbo.web.HTTPError(403, "Invalid commit identifier"))
-	end
+	validate_commit(commit)
 	taskqueue:enqueue({commit = commit})
 end
 
 
-local LogIndexHandler = class("LogIndexHandler", turbo.web.RequestHandler)
+local LogHandler = class("LogHandler", turbo.web.RequestHandler)
 
-function LogIndexHandler:get()
-	local file = io.open(log_dir.."index", "r")
-	self:write('<div style="font-family: monospace">\n')
-	self:write(file:read("*a"))
-	self:write('</div>')
-	file:close()
+function LogHandler:get(commit)
+	if not commit or commit == "" or commit == "index" then
+		local file = io.open(log_dir.."index", "r")
+		self:write('<div style="font-family: monospace">\n')
+		self:write(file:read("*a"))
+		file:close()
+		if taskqueue.curtask then
+			local commit = taskqueue.curtask.task.commit
+			self:write(
+				string.format('<i><a href="%s">%s</a> in progress</i><br />\n',
+					commit, commit)
+			)
+		end
+		self:write('</div>')
+	else
+		validate_commit(commit)
+		self:add_header("Content-Type", "text/plain; charset=UTF-8")
+		local file = io.open(log_dir..commit, "r")
+		self:write(file:read("*a"))
+		file:close()
+	end
 end
 
 
 local application = turbo.web.Application:new({
 	{"^/push_hook$", GitHubHandler},
-	{"^/log/index", LogIndexHandler},
-	{"^/log/(.*)$", turbo.web.StaticFileHandler, log_dir}
+	{"^/log/(.*)$", LogHandler},
 })
 
 application:listen(server_port, nil, {
