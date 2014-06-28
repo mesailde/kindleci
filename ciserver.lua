@@ -142,8 +142,10 @@ function LogHandler:get(commit)
 	if not commit or commit == "" or commit == "index" then
 		local file = io.open(log_dir.."index", "r")
 		self:write('<div style="font-family: monospace">\n')
-		self:write(file:read("*a"))
-		file:close()
+		if file then
+			self:write(file:read("*a"))
+			file:close()
+		end
 		if taskqueue.curtask then
 			local commit = taskqueue.curtask.task.commit
 			self:write(
@@ -154,8 +156,11 @@ function LogHandler:get(commit)
 		self:write('</div>')
 	else
 		validate_commit(commit)
-		self:add_header("Content-Type", "text/plain; charset=UTF-8")
 		local file = io.open(log_dir..commit, "r")
+		if not file then
+			error(turbo.web.HTTPError(404, "Not found"))
+		end
+		self:add_header("Content-Type", "text/plain; charset=UTF-8")
 		self:write(file:read("*a"))
 		file:close()
 	end
