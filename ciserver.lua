@@ -142,16 +142,16 @@ end
 
 
 local application = turbo.web.Application:new({
-    {"^/push_hook$", GitHubHandler},
+	{"^/push_hook$", GitHubHandler},
 	{"^/log/index", LogIndexHandler},
 	{"^/log/(.*)$", turbo.web.StaticFileHandler, log_dir}
 })
 
 application:listen(server_port, nil, {
-    ssl_options = {
-        key_file = "./sslkeys/server.key",
-        cert_file = "./sslkeys/server.crt"
-    }
+	ssl_options = {
+		key_file = "./sslkeys/server.key",
+		cert_file = "./sslkeys/server.crt"
+	}
 })
 
 ioloop:start()
