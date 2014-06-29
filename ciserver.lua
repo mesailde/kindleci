@@ -160,7 +160,8 @@ function LogHandler:get(commit)
 		if not file then
 			error(turbo.web.HTTPError(404, "Not found"))
 		end
-		self:add_header("Content-Type", "text/plain; charset=UTF-8")
+		self:add_header("Content-Type", "text/plain; charset=UTF-8; imeanit=yes")
+		self:add_header("X-Content-Type-Options", "nosniff")
 		self:write(file:read("*a"))
 		file:close()
 	end
